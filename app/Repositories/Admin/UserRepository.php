@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Hash;
 
 class UserRepository implements MasterInterface
 {
@@ -35,22 +36,34 @@ class UserRepository implements MasterInterface
         User::destroy($id);
     }
 
+    public function sanitizeData(array $data)
+    {
+
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        if ($data['country']) {
+            $country = $data['country'];
+            $countryLookup = Country::where('iso2', $country)->first();
+            if ($countryLookup) {
+                $data['country_id'] = $countryLookup->id;
+            }
+        }
+
+        unset($data['country']);
+
+        return $data;
+    }
+
     public function create(array $data)
     {
-        return User::create($data);
+        return User::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        if ($newDetails['country']) {
-            $country = $newDetails['country'];
-            $countryLookup = Country::where('iso2', $country)->first();
-            if ($countryLookup) {
-                $newDetails['country_id'] = $countryLookup->id;
-            }
-        }
-        unset($newDetails['country']);
-        return User::whereId($id)->update($newDetails);
+        return User::whereId($id)->update($this->sanitizeData($newDetails));
     }
 
     public function getAsyncListingData(Request $request)

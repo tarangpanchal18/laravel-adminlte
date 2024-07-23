@@ -29,10 +29,14 @@ $(document).ready(function() {
                 toastFire('Please wait', 'info', false)
             },
             success : function(response) {
-                setTimeout(() => {
-                    toastFire('Status has been updated successfully !', 'success')
-                    $('#data-table').DataTable().ajax.reload();
-                }, 1500);
+                if (response.success) {
+                    setTimeout(() => {
+                        toastFire(response.message, 'success')
+                        $('#data-table').DataTable().ajax.reload();
+                    }, 1500);
+                } else {
+                    toastFire('Something went wrong !', 'error')
+                }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 toastFire('Something went wrong !', 'error')
@@ -211,7 +215,12 @@ function removeDataFromDatabase(deleteUrl, id, csrf) {
                     _method: 'DELETE'
                 },
                 success : function(response) {
-                    toastFire('Data has been removed successfully !', 'success')
+                    if (response.success) {
+                        toastFire(response.message, 'success')
+                    } else {
+                        toastFire('We encoutered some error !', 'error')
+                    }
+
                     $('#data-table').DataTable().ajax.reload();
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

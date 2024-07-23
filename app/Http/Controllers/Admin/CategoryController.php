@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use App\Repositories\Admin\CategoryRepository;
-use App\Services\FilesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,10 +14,8 @@ use Illuminate\View\View;
 class CategoryController extends Controller
 {
 
-    public function __construct(
-        private CategoryRepository $categoryRepository,
-        private FilesService $fileService
-    ) {
+    public function __construct(private CategoryRepository $categoryRepository)
+    {
         //
     }
 
@@ -44,14 +41,8 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            $validated['image'] = $this->fileService->generateFileName('cat', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'),Category::UPLOAD_PATH,$validated['image']);
-        }
-        $this->categoryRepository->create($validated);
-
-        return redirect(route('admin.category.index'))->with('success', 'Data Created Successfully !');
+        $this->categoryRepository->create($request->validated());
+        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_insert_msg'));
     }
 
     public function edit(Category $category): View
@@ -64,28 +55,23 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function update(CategoryRequest $request, Category $category): RedirectResponse
+    public function update(CategoryRequest $request, Category $category): RedirectResponse|JsonResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            if ($category->image) {
-                $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
-            }
-            $validated['image'] = $this->fileService->generateFileName('cat', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'), Category::UPLOAD_PATH, $validated['image']);
+        $this->categoryRepository->update($category->id, $request->validated());
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')]);
         }
-        $this->categoryRepository->update($category->id, $validated);
 
-        return redirect(route('admin.category.index'))->with('success', 'Data Updated Successfully !');
+        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category, Request $request): RedirectResponse|JsonResponse
     {
-        if ($category->image) {
-            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
+        $this->categoryRepository->delete($category->id);
+        if ($request->ajax()) {
+            return response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')]);
         }
-        $category->delete();
 
-        return redirect(route('admin.category.index'))->with('success', 'Data Deleted Successfully !');
+        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }

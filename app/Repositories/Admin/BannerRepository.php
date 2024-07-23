@@ -4,11 +4,17 @@ namespace App\Repositories\Admin;
 
 use App\Interfaces\Admin\MasterInterface;
 use App\Models\Banner;
+use App\Services\FilesService;
 use Yajra\DataTables\DataTables;
 use Illuminate\Http\Request;
 
 class BannerRepository implements MasterInterface
 {
+    public function __construct(private FilesService $fileService)
+    {
+        //
+    }
+
     public function getAll()
     {
         return Banner::all();
@@ -29,19 +35,43 @@ class BannerRepository implements MasterInterface
         return Banner::findOrFail($id);
     }
 
-    public function delete($id)
+    public function sanitizeData(array $data)
     {
-        Banner::destroy($id);
+        if (isset($data['image'])) {
+            $fileName = $this->fileService->generateFileName('banner', $data['image']->getClientOriginalExtension());
+            $this->fileService->handleUpload($data['image'], Banner::UPLOAD_PATH, $fileName);
+            $data['image'] = $fileName;
+        }
+
+        return $data;
     }
 
     public function create(array $data)
     {
-        return Banner::create($data);
+        return Banner::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        return Banner::whereId($id)->update($newDetails);
+        $banner = Banner::whereId($id)->first();
+        $oldImage = $banner->image;
+        $status = $banner->update($this->sanitizeData($newDetails));
+
+        if ($status && isset($newDetails['image'])) {
+            $this->fileService->handleRemoveFile(Banner::UPLOAD_PATH, $oldImage);
+        }
+
+        return $status;
+    }
+
+    public function delete(int $id)
+    {
+        $banner = Banner::whereId($id)->first();
+        if ($banner->image) {
+            $this->fileService->handleRemoveFile(Banner::UPLOAD_PATH, $banner->image);
+        }
+
+        return $banner->delete();
     }
 
     public function getAsyncListingData(Request $request)

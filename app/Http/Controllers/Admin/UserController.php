@@ -10,7 +10,6 @@ use App\Repositories\Admin\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -37,11 +36,8 @@ class UserController extends Controller
 
     public function store(UserReqeust $request): RedirectResponse
     {
-        $validated = $request->validated();
-        $validated['password'] = Hash::make($validated['password']);
-        $this->userRepository->create($validated);
-
-        return redirect(route('admin.users.index'))->with('success', 'Data Created Successfully !');
+        $this->userRepository->create($request->validated());
+        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_insert_msg'));
     }
 
     public function edit(User $user): View
@@ -53,15 +49,23 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(UserReqeust $request, User $user): RedirectResponse
+    public function update(UserReqeust $request, User $user): RedirectResponse|JsonResponse
     {
         $this->userRepository->update($user->id, $request->validated());
-        return redirect(route('admin.users.index'))->with('success', 'Data Updated Successfully !');
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')]);
+        }
+
+        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(User $user, Request $request): RedirectResponse|JsonResponse
     {
         $user->delete();
-        return redirect(route('admin.users.index'))->with('success', 'Data Deleted Successfully !');
+        if ($request->ajax()) {
+            return response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')]);
+        }
+
+        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }
