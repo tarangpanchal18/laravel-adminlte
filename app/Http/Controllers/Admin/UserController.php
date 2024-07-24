@@ -14,16 +14,14 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public function __construct(private UserRepository $userRepository) {
-        $this->userRepository = $userRepository;
+        //
     }
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->userRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.users.index');
+        return $request->ajax()
+            ? $this->userRepository->getAsyncListingData($request)
+            : view('admin.users.index');
     }
 
     public function create(): View
@@ -52,20 +50,16 @@ class UserController extends Controller
     public function update(UserReqeust $request, User $user): RedirectResponse|JsonResponse
     {
         $this->userRepository->update($user->id, $request->validated());
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')]);
-        }
-
-        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
     public function destroy(User $user, Request $request): RedirectResponse|JsonResponse
     {
         $user->delete();
-        if ($request->ajax()) {
-            return response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')]);
-        }
-
-        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
+            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }

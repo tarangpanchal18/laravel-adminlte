@@ -21,13 +21,9 @@ class CategoryController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->categoryRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.category.index', [
-            'categoryData' => $this->categoryRepository->getParentCategory()
-        ]);
+        return $request->ajax()
+            ? $this->categoryRepository->getAsyncListingData($request)
+            : view('admin.category.index', ['categoryData' => $this->categoryRepository->getParentCategory()]);
     }
 
     public function create(): View
@@ -58,20 +54,16 @@ class CategoryController extends Controller
     public function update(CategoryRequest $request, Category $category): RedirectResponse|JsonResponse
     {
         $this->categoryRepository->update($category->id, $request->validated());
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')]);
-        }
-
-        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_update_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
     public function destroy(Category $category, Request $request): RedirectResponse|JsonResponse
     {
         $this->categoryRepository->delete($category->id);
-        if ($request->ajax()) {
-            return response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')]);
-        }
-
-        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
+            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }

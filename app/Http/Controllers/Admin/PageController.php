@@ -20,11 +20,9 @@ class PageController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->PageRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.pages.index');
+        return $request->ajax()
+            ? $this->PageRepository->getAsyncListingData($request)
+            : view('admin.pages.index');
     }
 
     public function create(): View

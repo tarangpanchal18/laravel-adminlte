@@ -20,13 +20,9 @@ class BannerController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->bannerRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.banner.index', [
-            'upload_path' => Banner::UPLOAD_PATH
-        ]);
+        return $request->ajax()
+            ? $this->bannerRepository->getAsyncListingData($request)
+            : view('admin.banner.index', ['upload_path' => Banner::UPLOAD_PATH]);
     }
 
     public function create(): View
@@ -55,20 +51,16 @@ class BannerController extends Controller
     public function update(BannerRequest $request, Banner $banner): RedirectResponse|JsonResponse
     {
         $this->bannerRepository->update($banner->id, $request->validated());
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')]);
-        }
-
-        return redirect(route('admin.banner.index'))->with('success', config('constants.default_data_update_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
     public function destroy(Banner $banner, Request $request): RedirectResponse|JsonResponse
     {
         $this->bannerRepository->delete($banner->id);
-        if ($request->ajax()) {
-            return response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')]);
-        }
-
-        return redirect(route('admin.banner.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $request->ajax()
+            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
+            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }
