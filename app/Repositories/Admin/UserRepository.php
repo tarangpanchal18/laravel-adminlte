@@ -38,7 +38,6 @@ class UserRepository implements MasterInterface
 
     public function sanitizeData(array $data)
     {
-
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
@@ -75,6 +74,9 @@ class UserRepository implements MasterInterface
 
         return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('cb', function($row) {
+                    return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
+                })
                 ->addColumn('name', function($row) {
                     return '<a href="'. route('admin.users.edit', $row->id) .'">'. $row->name .'</a>';
                 })
@@ -97,7 +99,7 @@ class UserRepository implements MasterInterface
                         '<div>' .
                         PHP_EOL;
                 })
-                ->rawColumns(['name', 'status', 'action'])
+                ->rawColumns(['cb', 'name', 'status', 'action'])
                 ->make(true);
     }
 

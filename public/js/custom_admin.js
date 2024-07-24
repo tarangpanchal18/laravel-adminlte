@@ -1,3 +1,8 @@
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------------------
+ *  Important Information
+ *  Any document ready queris should be written below this line
+ */
 $(document).ready(function() {
     $( ".select2" ).select2();
 
@@ -43,14 +48,52 @@ $(document).ready(function() {
             }
         });
     });
+
+    $(document).on('change', '.multi-select-all', function () {
+        var isChecked = $(this).is(':checked');
+        if (isChecked) {
+            $('#select-operation').removeClass('d-none');
+        } else {
+            $('#select-operation').addClass('d-none');
+        }
+        $('.multi-select').prop('checked', isChecked);
+    });
+
+    $(document).on('change', '.multi-select', function () {
+        if ($('.multi-select:checked').length > 0) {
+            $('#select-operation').removeClass('d-none');
+        } else {
+            $('#select-operation').addClass('d-none');
+        }
+    });
+
+    $(document).on('change', '#select-operation', function () {
+        var selectedCb = [];
+        var operationType = $(this).val();
+
+        $("input:checkbox[name=multi-select-cb]:checked").each(function(){
+            selectedCb.push($(this).attr('data-id'));
+        });
+
+        Swal.fire({
+            icon: 'info',
+            html: 'Are you sure you want to change status of selected data',
+            toast: true,
+            position: "top-end",
+            showConfirmButton: true,
+            showCancelButton: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        }).then((result) => {
+            if (result.value) {
+                handleMultipleCheckboxStatus(selectedCb, operationType)
+            }
+        });
+    });
 });
 
-/**
- * ------------------------------------------------------------------------
- *  Important Information
- *  Any Function should be written below this line
- * ------------------------------------------------------------------------
- */
 
 function toastFire(message, icon = 'info', showTimer = true) {
     if (showTimer) {
@@ -78,27 +121,16 @@ function toastFire(message, icon = 'info', showTimer = true) {
     }
 }
 
-/**
- * Function to generate the datatable
- *
- * @param string url
- * @param array coloumnsData
- * @param array filterData
- * @param array coloumnsData
- */
 function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExport = [1,2,3,4]) {
-
-    $('#data-table tfoot th').each( function (counter) {
-		var title = $(this).text();
-		var totalLen = $('#data-table tfoot th').length;
-        if (counter == 0 || counter == (totalLen-1) || title == "Status") {
-            $(this).html( '<input class="form-control" disabled type="text" />' );
-        } else {
-            $(this).html( '<input class="form-control" type="text" placeholder="'+ title +' Search" />' );
-        }
-	});
-
-    coloumnsData = filterColoumnsData(coloumnsData)
+    // $('#data-table tfoot th').each( function (counter) {
+	// 	var title = $(this).text();
+	// 	var totalLen = $('#data-table tfoot th').length;
+    //     if (counter == 0 || counter == (totalLen-1) || title == "Status") {
+    //         $(this).html( '<input class="form-control" disabled type="text" />' );
+    //     } else {
+    //         $(this).html( '<input class="form-control" type="text" placeholder="'+ title +' Search" />' );
+    //     }
+	// });
 
     var dtTable = $('#data-table').DataTable({
         processing: true,
@@ -109,7 +141,7 @@ function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExp
                 d.filterData = filterData;
             }
         },
-        columns: coloumnsData,
+        columns: filterColoumnsData(coloumnsData),
         dom: 'Bfrtip',
         order: [],
         iDisplayLength: 50,
@@ -117,58 +149,32 @@ function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExp
             {
                 "targets": 0,
                 "className": "text-center",
-                "width": "18%",
                 orderable: false,
+                sortable: false,
            },
-        ],
-        buttons: [
-            {
-                extend: 'pdfHtml5',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
-            {
-                extend: 'csvHtml5',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
-            {
-                extend: 'print',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
         ],
     });
 
-    dtTable.columns().every( function () {
-		var that = this;
-		$( 'input', this.footer() ).on( 'keyup change', function () {
-			if ( that.search() !== this.value ) {
-				that
-					.search( this.value )
-					.draw();
-			}
-		});
-	});
+    // dtTable.columns().every( function () {
+	// 	var that = this;
+	// 	$( 'input', this.footer() ).on( 'keyup change', function () {
+	// 		if ( that.search() !== this.value ) {
+	// 			that
+	// 				.search( this.value )
+	// 				.draw();
+	// 		}
+	// 	});
+	// });
 }
 
-/**
- * Function to filter coloumn data like hide status set width etc.
- *
- * @param array coloumnsData
- * @return array coloumnsData
- */
-function filterColoumnsData(coloumnsData)
-{
+function filterColoumnsData(coloumnsData) {
     for(key in coloumnsData){
         let curElement = coloumnsData[key];
         if (curElement.data == "DT_RowIndex") {
             coloumnsData[key]['sWidth'] = "5%";
             coloumnsData[key]['orderable'] = false;
             coloumnsData[key]['searchable'] = false;
+            coloumnsData[key]['data'] = 'cb';
         }
         if (curElement.data == "status") {
             coloumnsData[key]['sWidth'] = "8%";
@@ -187,12 +193,6 @@ function filterColoumnsData(coloumnsData)
     return coloumnsData;
 }
 
-/**
- * Function to remove Data from the database
- *
- * @param string deleteUrl
- * @param integer id
- */
 function removeDataFromDatabase(deleteUrl, id, csrf) {
     Swal.fire({
         icon: 'warning',
@@ -227,6 +227,34 @@ function removeDataFromDatabase(deleteUrl, id, csrf) {
                     toastFire('We encoutered some error !', 'error')
                 }
             });
+        }
+    });
+}
+
+function handleMultipleCheckboxStatus(dataIds, operationType) {
+    toastFire('Okay we are working on it', 'warning', true);
+    return false;
+    $.ajax({
+        type: "POST",
+        dataType : 'json',
+        url: deleteUrl + '/' + id,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: {
+            _method: 'DELETE'
+        },
+        success : function(response) {
+            if (response.success) {
+                toastFire(response.message, 'success')
+            } else {
+                toastFire('We encoutered some error !', 'error')
+            }
+
+            $('#data-table').DataTable().ajax.reload();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            toastFire('We encoutered some error !', 'error')
         }
     });
 }
