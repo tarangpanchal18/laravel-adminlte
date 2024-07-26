@@ -33,10 +33,11 @@
     <div class="card">
         <div class="card-header">
             <div class="float-left">
-                <select id="select-operation" class="form-control d-none">
+                <select id="select-operation" class="form-control d-none" data-url="{{ route('admin.users.index') }}">
                     <option value="">Select Operation</option>
                     <option value="1">Mark as Active</option>
                     <option value="2">Mark as InActive</option>
+                    <option value="3">Mark as Deleted</option>
                 </select>
             </div>
             <div class="float-right">

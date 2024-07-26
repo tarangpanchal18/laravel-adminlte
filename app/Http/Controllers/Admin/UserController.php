@@ -62,4 +62,16 @@ class UserController extends Controller
             ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
             : redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
+
+    public function handleMassUpdate(Request $request)
+    {
+        $ids = $request->ids;
+        $operationType = $request->operationType;
+        $this->userRepository->updateMultiple(User::class, $ids, $operationType);
+
+        return response()->json([
+            'success' => true,
+            'message' => config('constants.default_data_update_msg')
+        ]);
+    }
 }

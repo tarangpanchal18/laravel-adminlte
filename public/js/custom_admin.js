@@ -22,7 +22,7 @@ $(document).ready(function() {
         else if (dataValue == "1") {dataValue = "0"}
 
         $.ajax({
-            type: "POST",
+            type: "PATCH",
             dataType : 'json',
             url: dataUrl + '/' + dataId,
             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
@@ -37,14 +37,14 @@ $(document).ready(function() {
                 if (response.success) {
                     setTimeout(() => {
                         toastFire(response.message, 'success')
-                        $('#data-table').DataTable().ajax.reload();
+                        reloadListingTable()
                     }, 1500);
                 } else {
                     toastFire('Something went wrong !', 'error')
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-                toastFire('Something went wrong !', 'error')
+                toastFire('Something went wrong while changing status !', 'error')
             }
         });
     });
@@ -70,6 +70,15 @@ $(document).ready(function() {
     $(document).on('change', '#select-operation', function () {
         var selectedCb = [];
         var operationType = $(this).val();
+        var dataurl = $(this).attr('data-url');
+        var operationTypeText = getOperationTypeText(operationType);
+
+        if (!operationType || operationType == undefined || operationType == 0) {
+            return false;
+        }
+        if (!dataurl || dataurl == undefined || dataurl == '') {
+            return false;
+        }
 
         $("input:checkbox[name=multi-select-cb]:checked").each(function(){
             selectedCb.push($(this).attr('data-id'));
@@ -77,9 +86,8 @@ $(document).ready(function() {
 
         Swal.fire({
             icon: 'info',
-            html: 'Are you sure you want to change status of selected data',
-            toast: true,
-            position: "top-end",
+            title: 'Are you sure ?',
+            html: selectedCb.length + ' rows has been selected<br>All selected rows status will be updated to <strong>' + operationTypeText + '</strong>',
             showConfirmButton: true,
             showCancelButton: true,
             didOpen: (toast) => {
@@ -88,12 +96,34 @@ $(document).ready(function() {
             }
         }).then((result) => {
             if (result.value) {
-                handleMultipleCheckboxStatus(selectedCb, operationType)
+                handleMultipleCheckboxStatus(dataurl, selectedCb, operationType)
             }
         });
     });
 });
 
+
+function reloadListingTable() {
+    //resetting multiple checkboxes operation selection
+    $("#select-operation").val('');
+    $('.multi-select-all').prop('checked', false)
+    $('.multi-select').prop('checked', false)
+
+    //reloading the datatable
+    $('#data-table').DataTable().ajax.reload();
+}
+
+function getOperationTypeText(operationType) {
+    if (operationType == 1) {
+        return 'Active';
+    } else if (operationType == 2) {
+        return 'InActive';
+    } else if (operationType == 3) {
+        return 'Delete';
+    } else {
+        return 'n/a';
+    }
+}
 
 function toastFire(message, icon = 'info', showTimer = true) {
     if (showTimer) {
@@ -193,14 +223,14 @@ function filterColoumnsData(coloumnsData) {
     return coloumnsData;
 }
 
-function removeDataFromDatabase(deleteUrl, id, csrf) {
+function removeDataFromDatabase(deleteUrl, id, htmlMessage = '') {
     Swal.fire({
         icon: 'warning',
         title: 'Are you sure?',
-        text: "You won't be able to revert this!",
+        html: (htmlMessage ? htmlMessage : "You won't be able to revert this!"),
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
         if (result.value) {
@@ -221,7 +251,7 @@ function removeDataFromDatabase(deleteUrl, id, csrf) {
                         toastFire('We encoutered some error !', 'error')
                     }
 
-                    $('#data-table').DataTable().ajax.reload();
+                    reloadListingTable()
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     toastFire('We encoutered some error !', 'error')
@@ -231,18 +261,17 @@ function removeDataFromDatabase(deleteUrl, id, csrf) {
     });
 }
 
-function handleMultipleCheckboxStatus(dataIds, operationType) {
-    toastFire('Okay we are working on it', 'warning', true);
-    return false;
+function handleMultipleCheckboxStatus(dataurl, dataIds, operationType) {
     $.ajax({
-        type: "POST",
+        type: 'PATCH',
         dataType : 'json',
-        url: deleteUrl + '/' + id,
+        url: dataurl + '/mass-update',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
         data: {
-            _method: 'DELETE'
+            ids : dataIds,
+            operationType: operationType
         },
         success : function(response) {
             if (response.success) {
@@ -251,7 +280,7 @@ function handleMultipleCheckboxStatus(dataIds, operationType) {
                 toastFire('We encoutered some error !', 'error')
             }
 
-            $('#data-table').DataTable().ajax.reload();
+            reloadListingTable()
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             toastFire('We encoutered some error !', 'error')

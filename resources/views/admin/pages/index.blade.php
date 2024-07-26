@@ -23,14 +23,6 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tfoot>
-                <tr>
-                    <th>Page Name</th>
-                    <th>SEO Title</th>
-                    <th>Updated at</th>
-                    <th>Action</th>
-                </tr>
-            </tfoot>
             <tbody>
             </tbody>
         </table>

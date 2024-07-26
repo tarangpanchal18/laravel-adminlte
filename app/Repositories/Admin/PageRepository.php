@@ -2,13 +2,13 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
-class PageRepository implements MasterInterface
+class PageRepository extends BaseAdminModules
 {
     public function getAll()
     {

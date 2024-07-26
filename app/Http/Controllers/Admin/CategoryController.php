@@ -66,4 +66,16 @@ class CategoryController extends Controller
             ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
             : redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
+
+    public function handleMassUpdate(Request $request)
+    {
+        $ids = $request->ids;
+        $operationType = $request->operationType;
+        $this->categoryRepository->updateMultiple(Category::class, $ids, $operationType);
+
+        return response()->json([
+            'success' => true,
+            'message' => config('constants.default_data_update_msg')
+        ]);
+    }
 }

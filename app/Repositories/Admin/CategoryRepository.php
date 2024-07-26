@@ -2,13 +2,13 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Category;
 use App\Services\FilesService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
-class CategoryRepository implements MasterInterface
+class CategoryRepository extends BaseAdminModules
 {
 
     public function __construct(private FilesService $fileService)
@@ -88,6 +88,11 @@ class CategoryRepository implements MasterInterface
             $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
         }
 
+        if ($category->parent_id == null) {
+            $childs = $category->children->pluck('id')->toArray();
+            Category::whereIn('id', $childs)->delete();
+        }
+
         return $category->delete();
     }
 
@@ -100,6 +105,9 @@ class CategoryRepository implements MasterInterface
 
         return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('cb', function($row) {
+                    return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
+                })
                 ->editColumn('name', function($row) {
                     return '<a href="'. route('admin.category.edit', $row->id) .'">'. $row->name .'</a>';
                 })
@@ -125,7 +133,7 @@ class CategoryRepository implements MasterInterface
                         '<div>' .
                         PHP_EOL;
                 })
-                ->rawColumns(['name', 'status', 'action'])
+                ->rawColumns(['cb', 'name', 'status', 'action'])
                 ->make(true);
     }
 }

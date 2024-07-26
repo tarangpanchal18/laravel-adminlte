@@ -2,13 +2,13 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Banner;
 use App\Services\FilesService;
 use Yajra\DataTables\DataTables;
 use Illuminate\Http\Request;
 
-class BannerRepository implements MasterInterface
+class BannerRepository extends BaseAdminModules
 {
     public function __construct(private FilesService $fileService)
     {

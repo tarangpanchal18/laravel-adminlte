@@ -2,23 +2,24 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Hash;
 
-class UserRepository implements MasterInterface
+class UserRepository extends BaseAdminModules
 {
     public function getAll()
     {
         return User::all();
     }
 
-    public function getRaw($filterData = "")
+    public function getRaw($filterData = [])
     {
         $query = User::query();
+
         if (isset($filterData['status'])) {
             $query = $query->where('status', $filterData['status']);
         }
@@ -42,7 +43,7 @@ class UserRepository implements MasterInterface
             $data['password'] = Hash::make($data['password']);
         }
 
-        if ($data['country']) {
+        if (isset($data['country'])) {
             $country = $data['country'];
             $countryLookup = Country::where('iso2', $country)->first();
             if ($countryLookup) {
@@ -55,8 +56,7 @@ class UserRepository implements MasterInterface
         return $data;
     }
 
-    public function create(array $data)
-    {
+    public function create(array $data) {
         return User::create($this->sanitizeData($data));
     }
 
