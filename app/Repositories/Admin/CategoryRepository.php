@@ -2,13 +2,20 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Category;
+use App\Services\FilesService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
-class CategoryRepository implements MasterInterface
+class CategoryRepository extends BaseAdminModules
 {
+
+    public function __construct(private FilesService $fileService)
+    {
+        //
+    }
+
     public function getAll()
     {
         return Category::all();
@@ -45,19 +52,48 @@ class CategoryRepository implements MasterInterface
         return Category::findOrFail($id);
     }
 
-    public function delete($id)
+    public function sanitizeData(array $data)
     {
-        Category::destroy($id);
+        if (isset($data['image'])) {
+            $fileName = $this->fileService->generateFileName('cat', $data['image']->getClientOriginalExtension());
+            $this->fileService->handleUpload($data['image'], Category::UPLOAD_PATH, $fileName);
+            $data['image'] = $fileName;
+        }
+
+        return $data;
     }
 
     public function create(array $data)
     {
-        return Category::create($data);
+        return Category::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        return Category::whereId($id)->update($newDetails);
+        $category = Category::whereId($id)->first();
+        $oldImage = $category->image;
+        $status = $category->update($this->sanitizeData($newDetails));
+
+        if ($status && isset($newDetails['image'])) {
+            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $oldImage);
+        }
+
+        return $status;
+    }
+
+    public function delete($id)
+    {
+        $category = Category::whereId($id)->first();
+        if ($category->image) {
+            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
+        }
+
+        if ($category->parent_id == null) {
+            $childs = $category->children->pluck('id')->toArray();
+            Category::whereIn('id', $childs)->delete();
+        }
+
+        return $category->delete();
     }
 
     public function getAsyncListingData(Request $request)
@@ -69,6 +105,9 @@ class CategoryRepository implements MasterInterface
 
         return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('cb', function($row) {
+                    return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
+                })
                 ->editColumn('name', function($row) {
                     return '<a href="'. route('admin.category.edit', $row->id) .'">'. $row->name .'</a>';
                 })
@@ -94,7 +133,7 @@ class CategoryRepository implements MasterInterface
                         '<div>' .
                         PHP_EOL;
                 })
-                ->rawColumns(['name', 'status', 'action'])
+                ->rawColumns(['cb', 'name', 'status', 'action'])
                 ->make(true);
     }
 }

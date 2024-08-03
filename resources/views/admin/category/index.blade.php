@@ -41,6 +41,13 @@
 
     <div class="card">
         <div class="card-header">
+            <div class="float-left">
+                <select id="select-operation" class="form-control d-none" data-url="{{ route('admin.category.index') }}">
+                    <option value="">Select Operation</option>
+                    <option value="1">Mark as Active</option>
+                    <option value="2">Mark as InActive</option>
+                </select>
+            </div>
             <div class="float-right">
                 <a href="{{ route('admin.category.create') }}" class="btn btn-default"><i class="fa fa-plus"></i> Add Data</a>
             </div>
@@ -49,23 +56,16 @@
             <table class="ui celled table" id="data-table">
                 <thead>
                     <tr>
-                        <th>Parent Name</th>
+                        <th><input type="checkbox" class="multi-select-all"></th>
+                        <th>Parent Category</th>
                         <th>Name</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tfoot>
-                    <tr>
-                        <th>Parent Name</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </tfoot>
                 <tbody>
                 </tbody>
-        </table>
+            </table>
         </div>
     </div>
 @stop
@@ -76,6 +76,7 @@
 <script>
 $(document).ready(function() {
     generateDataTable('{{ route("admin.category.index") }}', [
+            {data: 'DT_RowIndex', name: 'id'},
             {data: 'parent', name: 'parent', orderable: false, searchable: false},
             {data: 'name', name: 'name'},
             {data: 'status', name: 'status'},
@@ -90,7 +91,11 @@ $(document).ready(function() {
 });
 
 function removeData(id) {
-    removeDataFromDatabase('{{route("admin.category.index")}}', id);
+    removeDataFromDatabase(
+        '{{route("admin.category.index")}}',
+        id,
+        'You won\'t be able to revert this!<br><span class="text-danger"><strong>CAUTION :</strong> All child category will also be deleted.</span>'
+    );
 }
 </script>
 @stop
