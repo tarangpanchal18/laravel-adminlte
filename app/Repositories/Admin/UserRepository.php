@@ -2,22 +2,24 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Hash;
 
-class UserRepository implements MasterInterface
+class UserRepository extends BaseAdminModules
 {
     public function getAll()
     {
         return User::all();
     }
 
-    public function getRaw($filterData = "")
+    public function getRaw($filterData = [])
     {
         $query = User::query();
+
         if (isset($filterData['status'])) {
             $query = $query->where('status', $filterData['status']);
         }
@@ -35,22 +37,32 @@ class UserRepository implements MasterInterface
         User::destroy($id);
     }
 
-    public function create(array $data)
+    public function sanitizeData(array $data)
     {
-        return User::create($data);
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        if (isset($data['country'])) {
+            $country = $data['country'];
+            $countryLookup = Country::where('iso2', $country)->first();
+            if ($countryLookup) {
+                $data['country_id'] = $countryLookup->id;
+            }
+        }
+
+        unset($data['country']);
+
+        return $data;
+    }
+
+    public function create(array $data) {
+        return User::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        if ($newDetails['country']) {
-            $country = $newDetails['country'];
-            $countryLookup = Country::where('iso2', $country)->first();
-            if ($countryLookup) {
-                $newDetails['country_id'] = $countryLookup->id;
-            }
-        }
-        unset($newDetails['country']);
-        return User::whereId($id)->update($newDetails);
+        return User::whereId($id)->update($this->sanitizeData($newDetails));
     }
 
     public function getAsyncListingData(Request $request)
@@ -62,6 +74,9 @@ class UserRepository implements MasterInterface
 
         return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('cb', function($row) {
+                    return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
+                })
                 ->addColumn('name', function($row) {
                     return '<a href="'. route('admin.users.edit', $row->id) .'">'. $row->name .'</a>';
                 })
@@ -84,7 +99,7 @@ class UserRepository implements MasterInterface
                         '<div>' .
                         PHP_EOL;
                 })
-                ->rawColumns(['name', 'status', 'action'])
+                ->rawColumns(['cb', 'name', 'status', 'action'])
                 ->make(true);
     }
 

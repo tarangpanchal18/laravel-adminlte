@@ -11,12 +11,12 @@ class FilesService {
         return Storage::disk('public')->putFileAs($filePath, $file, $fileNewName);
     }
 
-    function generateFileName($prefix = '', $extension = '')
+    function generateFileName($prefix = 'img', $extension = '')
     {
         $bytes = random_bytes(16);
         $name = bin2hex($bytes);
         if (! empty($prefix)) {
-            $name = $prefix . $name;
+            $name = $prefix . '_' . $name;
         }
         if (! empty($extension)) {
             $name .= '.' . $extension;
