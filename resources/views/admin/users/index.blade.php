@@ -32,6 +32,14 @@
 
     <div class="card">
         <div class="card-header">
+            <div class="float-left">
+                <select id="select-operation" class="form-control d-none" data-url="{{ route('admin.users.index') }}">
+                    <option value="">Select Operation</option>
+                    <option value="1">Mark as Active</option>
+                    <option value="2">Mark as InActive</option>
+                    <option value="3">Mark as Deleted</option>
+                </select>
+            </div>
             <div class="float-right">
                 <a href="{{ route('admin.users.create') }}" class="btn btn-default"><i class="fa fa-plus"></i> Add Data</a>
             </div>
@@ -40,7 +48,7 @@
             <table class="ui celled table" id="data-table">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th><input type="checkbox" class="multi-select-all"></th>
                         <th>Name</th>
                         <th>Phone</th>
                         <th>Email</th>
@@ -48,16 +56,6 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tfoot>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </tfoot>
                 <tbody>
                 </tbody>
         </table>

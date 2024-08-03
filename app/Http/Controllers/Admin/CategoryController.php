@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use App\Repositories\Admin\CategoryRepository;
-use App\Services\FilesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,22 +14,16 @@ use Illuminate\View\View;
 class CategoryController extends Controller
 {
 
-    public function __construct(
-        private CategoryRepository $categoryRepository,
-        private FilesService $fileService
-    ) {
+    public function __construct(private CategoryRepository $categoryRepository)
+    {
         //
     }
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->categoryRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.category.index', [
-            'categoryData' => $this->categoryRepository->getParentCategory()
-        ]);
+        return $request->ajax()
+            ? $this->categoryRepository->getAsyncListingData($request)
+            : view('admin.category.index', ['categoryData' => $this->categoryRepository->getParentCategory()]);
     }
 
     public function create(): View
@@ -44,14 +37,8 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            $validated['image'] = $this->fileService->generateFileName('cat', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'),Category::UPLOAD_PATH,$validated['image']);
-        }
-        $this->categoryRepository->create($validated);
-
-        return redirect(route('admin.category.index'))->with('success', 'Data Created Successfully !');
+        $this->categoryRepository->create($request->validated());
+        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_insert_msg'));
     }
 
     public function edit(Category $category): View
@@ -64,28 +51,31 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function update(CategoryRequest $request, Category $category): RedirectResponse
+    public function update(CategoryRequest $request, Category $category): RedirectResponse|JsonResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            if ($category->image) {
-                $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
-            }
-            $validated['image'] = $this->fileService->generateFileName('cat', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'), Category::UPLOAD_PATH, $validated['image']);
-        }
-        $this->categoryRepository->update($category->id, $validated);
-
-        return redirect(route('admin.category.index'))->with('success', 'Data Updated Successfully !');
+        $this->categoryRepository->update($category->id, $request->validated());
+        return $request->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category, Request $request): RedirectResponse|JsonResponse
     {
-        if ($category->image) {
-            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
-        }
-        $category->delete();
+        $this->categoryRepository->delete($category->id);
+        return $request->ajax()
+            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
+            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
+    }
 
-        return redirect(route('admin.category.index'))->with('success', 'Data Deleted Successfully !');
+    public function handleMassUpdate(Request $request)
+    {
+        $ids = $request->ids;
+        $operationType = $request->operationType;
+        $this->categoryRepository->updateMultiple(Category::class, $ids, $operationType);
+
+        return response()->json([
+            'success' => true,
+            'message' => config('constants.default_data_update_msg')
+        ]);
     }
 }

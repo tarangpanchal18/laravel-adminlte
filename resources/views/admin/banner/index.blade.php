@@ -47,15 +47,6 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tfoot>
-                    <tr>
-                        <th>Image</th>
-                        <th>Title</th>
-                        <th>Order</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </tfoot>
                 <tbody>
                 </tbody>
         </table>

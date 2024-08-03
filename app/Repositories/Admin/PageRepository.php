@@ -2,12 +2,13 @@
 
 namespace App\Repositories\Admin;
 
-use App\Interfaces\Admin\MasterInterface;
+use App\Interfaces\BaseAdminModules;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Str;
 
-class PageRepository implements MasterInterface
+class PageRepository extends BaseAdminModules
 {
     public function getAll()
     {
@@ -29,19 +30,26 @@ class PageRepository implements MasterInterface
         return Page::findOrFail($id);
     }
 
-    public function delete($id)
+    public function sanitizeData(array $data)
     {
-        Page::destroy($id);
+        $data['page_slug'] = Str::slug($data['page_name']);
+
+        return $data;
     }
 
     public function create(array $data)
     {
-        return Page::create($data);
+        return Page::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        return Page::whereId($id)->update($newDetails);
+        return Page::whereId($id)->update($this->sanitizeData($newDetails));
+    }
+
+    public function delete($id)
+    {
+        Page::destroy($id);
     }
 
     public function getAsyncListingData(Request $request)

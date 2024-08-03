@@ -1,3 +1,8 @@
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------------------
+ *  Important Information
+ *  Any document ready queris should be written below this line
+ */
 $(document).ready(function() {
     $( ".select2" ).select2();
 
@@ -17,7 +22,7 @@ $(document).ready(function() {
         else if (dataValue == "1") {dataValue = "0"}
 
         $.ajax({
-            type: "POST",
+            type: "PATCH",
             dataType : 'json',
             url: dataUrl + '/' + dataId,
             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
@@ -29,24 +34,96 @@ $(document).ready(function() {
                 toastFire('Please wait', 'info', false)
             },
             success : function(response) {
-                setTimeout(() => {
-                    toastFire('Status has been updated successfully !', 'success')
-                    $('#data-table').DataTable().ajax.reload();
-                }, 1500);
+                if (response.success) {
+                    setTimeout(() => {
+                        toastFire(response.message, 'success')
+                        reloadListingTable()
+                    }, 1500);
+                } else {
+                    toastFire('Something went wrong !', 'error')
+                }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-                toastFire('Something went wrong !', 'error')
+                toastFire('Something went wrong while changing status !', 'error')
+            }
+        });
+    });
+
+    $(document).on('change', '.multi-select-all', function () {
+        var isChecked = $(this).is(':checked');
+        if (isChecked) {
+            $('#select-operation').removeClass('d-none');
+        } else {
+            $('#select-operation').addClass('d-none');
+        }
+        $('.multi-select').prop('checked', isChecked);
+    });
+
+    $(document).on('change', '.multi-select', function () {
+        if ($('.multi-select:checked').length > 0) {
+            $('#select-operation').removeClass('d-none');
+        } else {
+            $('#select-operation').addClass('d-none');
+        }
+    });
+
+    $(document).on('change', '#select-operation', function () {
+        var selectedCb = [];
+        var operationType = $(this).val();
+        var dataurl = $(this).attr('data-url');
+        var operationTypeText = getOperationTypeText(operationType);
+
+        if (!operationType || operationType == undefined || operationType == 0) {
+            return false;
+        }
+        if (!dataurl || dataurl == undefined || dataurl == '') {
+            return false;
+        }
+
+        $("input:checkbox[name=multi-select-cb]:checked").each(function(){
+            selectedCb.push($(this).attr('data-id'));
+        });
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Are you sure ?',
+            html: selectedCb.length + ' rows has been selected<br>All selected rows status will be updated to <strong>' + operationTypeText + '</strong>',
+            showConfirmButton: true,
+            showCancelButton: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        }).then((result) => {
+            if (result.value) {
+                handleMultipleCheckboxStatus(dataurl, selectedCb, operationType)
             }
         });
     });
 });
 
-/**
- * ------------------------------------------------------------------------
- *  Important Information
- *  Any Function should be written below this line
- * ------------------------------------------------------------------------
- */
+
+function reloadListingTable() {
+    //resetting multiple checkboxes operation selection
+    $("#select-operation").val('');
+    $('.multi-select-all').prop('checked', false)
+    $('.multi-select').prop('checked', false)
+
+    //reloading the datatable
+    $('#data-table').DataTable().ajax.reload();
+}
+
+function getOperationTypeText(operationType) {
+    if (operationType == 1) {
+        return 'Active';
+    } else if (operationType == 2) {
+        return 'InActive';
+    } else if (operationType == 3) {
+        return 'Delete';
+    } else {
+        return 'n/a';
+    }
+}
 
 function toastFire(message, icon = 'info', showTimer = true) {
     if (showTimer) {
@@ -74,27 +151,16 @@ function toastFire(message, icon = 'info', showTimer = true) {
     }
 }
 
-/**
- * Function to generate the datatable
- *
- * @param string url
- * @param array coloumnsData
- * @param array filterData
- * @param array coloumnsData
- */
 function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExport = [1,2,3,4]) {
-
-    $('#data-table tfoot th').each( function (counter) {
-		var title = $(this).text();
-		var totalLen = $('#data-table tfoot th').length;
-        if (counter == 0 || counter == (totalLen-1) || title == "Status") {
-            $(this).html( '<input class="form-control" disabled type="text" />' );
-        } else {
-            $(this).html( '<input class="form-control" type="text" placeholder="'+ title +' Search" />' );
-        }
-	});
-
-    coloumnsData = filterColoumnsData(coloumnsData)
+    // $('#data-table tfoot th').each( function (counter) {
+	// 	var title = $(this).text();
+	// 	var totalLen = $('#data-table tfoot th').length;
+    //     if (counter == 0 || counter == (totalLen-1) || title == "Status") {
+    //         $(this).html( '<input class="form-control" disabled type="text" />' );
+    //     } else {
+    //         $(this).html( '<input class="form-control" type="text" placeholder="'+ title +' Search" />' );
+    //     }
+	// });
 
     var dtTable = $('#data-table').DataTable({
         processing: true,
@@ -105,7 +171,7 @@ function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExp
                 d.filterData = filterData;
             }
         },
-        columns: coloumnsData,
+        columns: filterColoumnsData(coloumnsData),
         dom: 'Bfrtip',
         order: [],
         iDisplayLength: 50,
@@ -113,58 +179,32 @@ function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExp
             {
                 "targets": 0,
                 "className": "text-center",
-                "width": "18%",
                 orderable: false,
+                sortable: false,
            },
-        ],
-        buttons: [
-            {
-                extend: 'pdfHtml5',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
-            {
-                extend: 'csvHtml5',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
-            {
-                extend: 'print',
-                exportOptions: {
-                    columns: coloumnsToExport
-                }
-            },
         ],
     });
 
-    dtTable.columns().every( function () {
-		var that = this;
-		$( 'input', this.footer() ).on( 'keyup change', function () {
-			if ( that.search() !== this.value ) {
-				that
-					.search( this.value )
-					.draw();
-			}
-		});
-	});
+    // dtTable.columns().every( function () {
+	// 	var that = this;
+	// 	$( 'input', this.footer() ).on( 'keyup change', function () {
+	// 		if ( that.search() !== this.value ) {
+	// 			that
+	// 				.search( this.value )
+	// 				.draw();
+	// 		}
+	// 	});
+	// });
 }
 
-/**
- * Function to filter coloumn data like hide status set width etc.
- *
- * @param array coloumnsData
- * @return array coloumnsData
- */
-function filterColoumnsData(coloumnsData)
-{
+function filterColoumnsData(coloumnsData) {
     for(key in coloumnsData){
         let curElement = coloumnsData[key];
         if (curElement.data == "DT_RowIndex") {
             coloumnsData[key]['sWidth'] = "5%";
             coloumnsData[key]['orderable'] = false;
             coloumnsData[key]['searchable'] = false;
+            coloumnsData[key]['data'] = 'cb';
         }
         if (curElement.data == "status") {
             coloumnsData[key]['sWidth'] = "8%";
@@ -183,20 +223,14 @@ function filterColoumnsData(coloumnsData)
     return coloumnsData;
 }
 
-/**
- * Function to remove Data from the database
- *
- * @param string deleteUrl
- * @param integer id
- */
-function removeDataFromDatabase(deleteUrl, id, csrf) {
+function removeDataFromDatabase(deleteUrl, id, htmlMessage = '') {
     Swal.fire({
         icon: 'warning',
         title: 'Are you sure?',
-        text: "You won't be able to revert this!",
+        html: (htmlMessage ? htmlMessage : "You won't be able to revert this!"),
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
         if (result.value) {
@@ -211,13 +245,45 @@ function removeDataFromDatabase(deleteUrl, id, csrf) {
                     _method: 'DELETE'
                 },
                 success : function(response) {
-                    toastFire('Data has been removed successfully !', 'success')
-                    $('#data-table').DataTable().ajax.reload();
+                    if (response.success) {
+                        toastFire(response.message, 'success')
+                    } else {
+                        toastFire('We encoutered some error !', 'error')
+                    }
+
+                    reloadListingTable()
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     toastFire('We encoutered some error !', 'error')
                 }
             });
+        }
+    });
+}
+
+function handleMultipleCheckboxStatus(dataurl, dataIds, operationType) {
+    $.ajax({
+        type: 'PATCH',
+        dataType : 'json',
+        url: dataurl + '/mass-update',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: {
+            ids : dataIds,
+            operationType: operationType
+        },
+        success : function(response) {
+            if (response.success) {
+                toastFire(response.message, 'success')
+            } else {
+                toastFire('We encoutered some error !', 'error')
+            }
+
+            reloadListingTable()
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            toastFire('We encoutered some error !', 'error')
         }
     });
 }

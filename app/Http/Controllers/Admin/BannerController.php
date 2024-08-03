@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BannerRequest;
 use App\Models\Banner;
 use App\Repositories\Admin\BannerRepository;
-use App\Services\FilesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,19 +14,15 @@ use Illuminate\View\View;
 class BannerController extends Controller
 {
 
-    public function __construct(private BannerRepository $bannerRepository, private FilesService $fileService) {
-        $this->bannerRepository = $bannerRepository;
+    public function __construct(private BannerRepository $bannerRepository) {
+        //
     }
 
     public function index(Request $request): View|JsonResponse
     {
-        if ($request->ajax()) {
-            return $this->bannerRepository->getAsyncListingData($request);
-        }
-
-        return view('admin.banner.index', [
-            'upload_path' => Banner::UPLOAD_PATH
-        ]);
+        return $request->ajax()
+            ? $this->bannerRepository->getAsyncListingData($request)
+            : view('admin.banner.index', ['upload_path' => Banner::UPLOAD_PATH]);
     }
 
     public function create(): View
@@ -40,14 +35,8 @@ class BannerController extends Controller
 
     public function store(BannerRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            $validated['image'] = $this->fileService->generateFileName('banner', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'), Banner::UPLOAD_PATH, $validated['image']);
-        }
-        $this->bannerRepository->create($validated);
-
-        return redirect(route('admin.banner.index'))->with('success', 'Data Created Successfully !');
+        $this->bannerRepository->create($request->validated());
+        return redirect(route('admin.banner.index'))->with('success', config('constants.default_data_insert_msg'));
     }
 
     public function edit(Banner $banner)
@@ -59,27 +48,19 @@ class BannerController extends Controller
         ]);
     }
 
-    public function update(BannerRequest $request, Banner $banner)
+    public function update(BannerRequest $request, Banner $banner): RedirectResponse|JsonResponse
     {
-        $validated = $request->validated();
-        if ($request->file('image')) {
-            $this->fileService->handleRemoveFile(Banner::UPLOAD_PATH, $banner->image);
-            $validated['image'] = $this->fileService->generateFileName('banner', $request->file('image')->getClientOriginalExtension());
-            $this->fileService->handleUpload($request->file('image'), Banner::UPLOAD_PATH, $validated['image']
-            );
-        }
-        $this->bannerRepository->update($banner->id, $validated);
-
-        return redirect(route('admin.banner.index'))->with('success', 'Data Updated Successfully !');
+        $this->bannerRepository->update($banner->id, $request->validated());
+        return $request->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_update_msg'));
     }
 
-    public function destroy(Banner $banner)
+    public function destroy(Banner $banner, Request $request): RedirectResponse|JsonResponse
     {
-        if ($banner->image) {
-            $this->fileService->handleRemoveFile(Banner::UPLOAD_PATH, $banner->image);
-        }
-        $banner->delete();
-
-        return redirect(route('admin.banner.index'))->with('success', 'Data Deleted Successfully !');
+        $this->bannerRepository->delete($banner->id);
+        return $request->ajax()
+            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
+            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_deleted_msg'));
     }
 }

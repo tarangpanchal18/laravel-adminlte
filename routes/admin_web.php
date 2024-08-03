@@ -20,8 +20,13 @@ Route::prefix(config('app.admin_path_name'))->name('admin.')->group(function () 
         Route::get('', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('profile', [ProfileController::class, 'profile'])->name('profile');
         Route::put('profile', [ProfileController::class, 'handleUpdateProfile'])->name('updateProfile');
+
+        Route::patch('users/mass-update', [UserController::class, 'handleMassUpdate']);
         Route::resource('users', UserController::class);
+
+        Route::patch('category/mass-update', [CategoryController::class, 'handleMassUpdate']);
         Route::resource('category', CategoryController::class);
+
         Route::resource('banner', BannerController::class);
         Route::resource('pages', PageController::class);
         Route::post('logout', [AdminAuthenticatedSessionController::class, 'destroy'])->name('logout');
