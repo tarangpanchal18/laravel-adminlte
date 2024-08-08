@@ -114,4 +114,15 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Enable Sending Mail on Registration from administration
+    |--------------------------------------------------------------------------
+    |
+    | If you want to enable sending mail when user register from admin panel,
+    | you may configure this setting enable to true
+    | This will send an email to that user when user is added to system
+    */
+    'enable_user_mail_on_register' => true
+
 ];

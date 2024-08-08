@@ -3,6 +3,7 @@
 namespace App\Repositories\Admin;
 
 use App\Interfaces\BaseAdminModules;
+use App\Jobs\WelcomeUserJob;
 use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -57,7 +58,17 @@ class UserRepository extends BaseAdminModules
     }
 
     public function create(array $data) {
-        return User::create($this->sanitizeData($data));
+        try {
+            $user = User::create($this->sanitizeData($data));
+
+            if (config('mail.enable_user_mail_on_register')) {
+                WelcomeUserJob::dispatch($user);
+            }
+
+            return redirect(route('admin.users.index'))->with('success', config('constants.default_data_insert_msg'));
+        } catch (\Throwable $th) {
+            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
     }
 
     public function update($id, array $newDetails)

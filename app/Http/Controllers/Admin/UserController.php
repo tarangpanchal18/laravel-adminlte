@@ -34,8 +34,7 @@ class UserController extends Controller
 
     public function store(UserReqeust $request): RedirectResponse
     {
-        $this->userRepository->create($request->validated());
-        return redirect(route('admin.users.index'))->with('success', config('constants.default_data_insert_msg'));
+        return $this->userRepository->create($request->validated());
     }
 
     public function edit(User $user): View

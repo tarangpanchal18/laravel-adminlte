@@ -7,9 +7,11 @@ return [
     'default_edit_txt' => 'Edit data',
     'default_delete_txt' => 'Delete Data',
     'default_status_change_txt' => 'Click to change status',
+
     'default_data_insert_msg' => 'Data inserted successfully',
     'default_data_update_msg' => 'Data updated successfully',
     'default_data_deleted_msg' => 'Data deleted successfully',
+    'default_data_failed_msg' => 'Whoops! Something went wrong.',
 
     'default_datetime_format' => 'd-m-Y H:iA',
     'default_date' => 'd-m-Y',

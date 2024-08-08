@@ -17,7 +17,7 @@
 
 @if (session('error'))
     Swal.fire({
-        icon: "success",
+        icon: "error",
         html: "{{ session('error') }}",
         toast: true,
         position: "top-end",
