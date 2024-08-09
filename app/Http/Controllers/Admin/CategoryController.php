@@ -37,8 +37,7 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): RedirectResponse
     {
-        $this->categoryRepository->create($request->validated());
-        return redirect(route('admin.category.index'))->with('success', config('constants.default_data_insert_msg'));
+        return $this->categoryRepository->create($request->validated());
     }
 
     public function edit(Category $category): View
@@ -53,18 +52,12 @@ class CategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category): RedirectResponse|JsonResponse
     {
-        $this->categoryRepository->update($category->id, $request->validated());
-        return $request->ajax()
-            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
-            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_update_msg'));
+        return $this->categoryRepository->update($category->id, $request->validated());
     }
 
     public function destroy(Category $category, Request $request): RedirectResponse|JsonResponse
     {
-        $this->categoryRepository->delete($category->id);
-        return $request->ajax()
-            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
-            : redirect(route('admin.category.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $this->categoryRepository->delete($category->id);
     }
 
     public function handleMassUpdate(Request $request)

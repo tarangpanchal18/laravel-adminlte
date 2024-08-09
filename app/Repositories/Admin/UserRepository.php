@@ -13,14 +13,19 @@ use Illuminate\Support\Facades\Hash;
 
 class UserRepository extends BaseAdminModules
 {
+
+    const BASE_URL = 'admin.users';
+
+    const MODEL = User::class;
+
     public function getAll()
     {
-        return User::all();
+        return self::MODEL::all();
     }
 
     public function getRaw($filterData = [])
     {
-        $query = User::query();
+        $query = self::MODEL::query();
 
         if (isset($filterData['status'])) {
             $query = $query->where('status', $filterData['status']);
@@ -31,21 +36,7 @@ class UserRepository extends BaseAdminModules
 
     public function getById($id)
     {
-        return User::findOrFail($id);
-    }
-
-    public function delete($id)
-    {
-        try {
-            User::destroy($id);
-
-            return request()->ajax()
-                ? response()->json(['success' => true, 'message' => config('constants.default_data_deleted_msg')])
-                : redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
-        } catch (\Throwable $th) {
-            CustomLogger::write('User', ERROR, $th->getMessage());
-            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
-        }
+        return self::MODEL::findOrFail($id);
     }
 
     public function sanitizeData(array $data)
@@ -69,30 +60,44 @@ class UserRepository extends BaseAdminModules
 
     public function create(array $data) {
         try {
-            $user = User::create($this->sanitizeData($data));
+            $user = self::MODEL::create($this->sanitizeData($data));
 
             if (config('mail.enable_user_mail_on_register')) {
                 WelcomeUserJob::dispatch($user);
             }
 
-            return redirect(route('admin.users.index'))->with('success', config('constants.default_data_insert_msg'));
+            return redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_insert_msg'));
         } catch (\Throwable $th) {
             CustomLogger::write('User', ERROR, $th->getMessage());
-            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
         }
     }
 
     public function update($id, array $newDetails)
     {
         try {
-            User::whereId($id)->update($this->sanitizeData($newDetails));
+            self::MODEL::whereId($id)->update($this->sanitizeData($newDetails));
 
             return request()->ajax()
             ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
-            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
+            : redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_update_msg'));
         } catch (\Throwable $th) {
             CustomLogger::write('User', ERROR, $th->getMessage());
-            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            self::MODEL::destroy($id);
+
+            return request()->ajax()
+                ? response()->json(['success' => true, 'message' => config('constants.default_data_deleted_msg')])
+                : redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_deleted_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('User', ERROR, $th->getMessage());
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
         }
     }
 
@@ -109,13 +114,13 @@ class UserRepository extends BaseAdminModules
                     return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
                 })
                 ->addColumn('name', function($row) {
-                    return '<a href="'. route('admin.users.edit', $row->id) .'">'. $row->name .'</a>';
+                    return '<a href="'. route(self::BASE_URL . '.edit', $row->id) .'">'. $row->name .'</a>';
                 })
                 ->editColumn('status', function($row) {
                     return '<button
                         data-id="'. $row->id .'"
                         data-value="'. $row->status .'"
-                        data-url="'. route("admin.users.index") .'"
+                        data-url="'. route(self::BASE_URL. ".index") .'"
                         data-toggle="tooltip"
                         data-placement="top"
                         title="'. config('constants.default_status_change_txt') .'"
@@ -125,7 +130,7 @@ class UserRepository extends BaseAdminModules
                 })
                 ->addColumn('action', function($row){
                         return '<div>' .
-                        '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="'. route('admin.users.edit', $row->id) .'" class="edit btn btn-success btn-sm"><i class="fa fa-edit"></i></a>&nbsp;' .
+                        '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="'. route(self::BASE_URL . '.edit', $row->id) .'" class="edit btn btn-success btn-sm"><i class="fa fa-edit"></i></a>&nbsp;' .
                         '<button data-toggle="tooltip" title="Delete Data" onclick="removeData('. $row->id. ')" class="edit btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>' .
                         '<div>' .
                         PHP_EOL;
@@ -136,6 +141,6 @@ class UserRepository extends BaseAdminModules
 
     public function getTotalCount(array $where = [])
     {
-        return User::where($where)->count();
+        return self::MODEL::where($where)->count();
     }
 }

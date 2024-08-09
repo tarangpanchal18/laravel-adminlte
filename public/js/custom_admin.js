@@ -151,7 +151,7 @@ function toastFire(message, icon = 'info', showTimer = true) {
     }
 }
 
-function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExport = [1,2,3,4]) {
+function generateDataTable(dataUrl, coloumnsData, filterData = []) {
     // $('#data-table tfoot th').each( function (counter) {
 	// 	var title = $(this).text();
 	// 	var totalLen = $('#data-table tfoot th').length;
@@ -172,10 +172,16 @@ function generateDataTable(dataUrl, coloumnsData, filterData = [], coloumnsToExp
             }
         },
         columns: filterColoumnsData(coloumnsData),
-        dom: 'Bfrtip',
+        // dom: 'Bfrtip',
         order: [],
         iDisplayLength: 50,
         'columnDefs': [
+            {
+                "targets": '_all',
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    $(td).css('padding', '7px')
+                }
+            },
             {
                 "targets": 0,
                 "className": "text-center",
