@@ -48,18 +48,12 @@ class UserController extends Controller
 
     public function update(UserReqeust $request, User $user): RedirectResponse|JsonResponse
     {
-        $this->userRepository->update($user->id, $request->validated());
-        return $request->ajax()
-            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
-            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
+        return $this->userRepository->update($user->id, $request->validated());
     }
 
     public function destroy(User $user, Request $request): RedirectResponse|JsonResponse
     {
-        $user->delete();
-        return $request->ajax()
-            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
-            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $this->userRepository->delete($user->id);
     }
 
     public function handleMassUpdate(Request $request)

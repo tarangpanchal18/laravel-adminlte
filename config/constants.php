@@ -11,7 +11,7 @@ return [
     'default_data_insert_msg' => 'Data inserted successfully',
     'default_data_update_msg' => 'Data updated successfully',
     'default_data_deleted_msg' => 'Data deleted successfully',
-    'default_data_failed_msg' => 'Whoops! Something went wrong.',
+    'default_data_failed_msg' => 'Whoops! Something went wrong. Log has been reported.',
 
     'default_datetime_format' => 'd-m-Y H:iA',
     'default_date' => 'd-m-Y',

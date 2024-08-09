@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Admin;
 
+use App\Facades\CustomLogger;
 use App\Interfaces\BaseAdminModules;
 use App\Jobs\WelcomeUserJob;
 use App\Models\Country;
@@ -35,7 +36,16 @@ class UserRepository extends BaseAdminModules
 
     public function delete($id)
     {
-        User::destroy($id);
+        try {
+            User::destroy($id);
+
+            return request()->ajax()
+                ? response()->json(['success' => true, 'message' => config('constants.default_data_deleted_msg')])
+                : redirect(route('admin.users.index'))->with('success', config('constants.default_data_deleted_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('User', ERROR, $th->getMessage());
+            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
     }
 
     public function sanitizeData(array $data)
@@ -67,13 +77,23 @@ class UserRepository extends BaseAdminModules
 
             return redirect(route('admin.users.index'))->with('success', config('constants.default_data_insert_msg'));
         } catch (\Throwable $th) {
+            CustomLogger::write('User', ERROR, $th->getMessage());
             return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
         }
     }
 
     public function update($id, array $newDetails)
     {
-        return User::whereId($id)->update($this->sanitizeData($newDetails));
+        try {
+            User::whereId($id)->update($this->sanitizeData($newDetails));
+
+            return request()->ajax()
+            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+            : redirect(route('admin.users.index'))->with('success', config('constants.default_data_update_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('User', ERROR, $th->getMessage());
+            return redirect(route('admin.users.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
     }
 
     public function getAsyncListingData(Request $request)
