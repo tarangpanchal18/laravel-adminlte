@@ -179,6 +179,7 @@ return [
          * Package Service Providers...
          */
         Yajra\DataTables\DataTablesServiceProvider::class,
+        App\Providers\CustomLoggerServiceProvider::class,
 
         /*
          * Application Service Providers...
