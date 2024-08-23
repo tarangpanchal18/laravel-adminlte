@@ -17,7 +17,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-     /*
+    /*
     |--------------------------------------------------------------------------
     | Admin Path
     |--------------------------------------------------------------------------
@@ -27,6 +27,17 @@ return [
     |
     */
     'admin_path_name' => env('ADMIN_PATH', 'webadmin'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Path
+    |--------------------------------------------------------------------------
+    |
+    | This value is the name of your application admin url. This value is used when the
+    | framework needs to place the application's admin URL.
+    |
+    */
+    'admin_roles' => env('ADMIN_ROLES', 'admin, sub admin'),
 
     /*
     |--------------------------------------------------------------------------

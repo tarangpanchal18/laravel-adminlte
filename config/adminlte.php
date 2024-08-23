@@ -313,16 +313,25 @@ return [
             'icon' => 'fab fa-dashcube',
         ],
         [
+            'text' => 'Roles List',
+            'url'  => env('ADMIN_PATH') . '/roles',
+            'active' => [env('ADMIN_PATH') . '/roles*'],
+            'icon' => 'fas fa-fw fa-shield-alt',
+            'can' => 'view permission module'
+        ],
+        [
             'text' => 'Users List',
             'url'  => env('ADMIN_PATH') . '/users',
             'active' => [env('ADMIN_PATH') . '/users*'],
             'icon' => 'fas fa-fw fa-user',
+            'can' => 'view users'
         ],
         [
             'text' => 'Category List',
             'url'  => env('ADMIN_PATH') . '/category',
             'active' => [env('ADMIN_PATH') . '/category*'],
             'icon' => 'fas fa-fw fa-list-ol',
+            'can' => 'view category'
         ],
         [
             'text'    => 'Website Management',
@@ -331,6 +340,7 @@ return [
                 env('ADMIN_PATH') . '/pages*',
                 env('ADMIN_PATH') . '/banner*'
             ],
+            'can' => ['view cmspage', 'view website banner'],
             'submenu' => [
                 [
                     'text'    => 'CMS Pages',
@@ -409,11 +419,6 @@ return [
                     'asset' => true,
                     'location' => 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.3.2/build/js/intlTelInput.min.js',
                 ],
-            ],
-        ],
-        'Datatables' => [
-            'active' => false,
-            'files' => [
                 [
                     'type' => 'css',
                     'asset' => false,
@@ -424,6 +429,11 @@ return [
                     'asset' => false,
                     'location' => 'https://cdn.datatables.net/2.0.8/css/dataTables.semanticui.css',
                 ],
+            ],
+        ],
+        'Datatables' => [
+            'active' => false,
+            'files' => [
                 [
                     'type' => 'js',
                     'asset' => false,
@@ -438,31 +448,6 @@ return [
                     'type' => 'css',
                     'asset' => false,
                     'location' => '//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css',
-                ],
-                [
-                    'type' => 'js',
-                    'asset' => false,
-                    'location' => 'https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js',
-                ],
-                [
-                    'type' => 'js',
-                    'asset' => false,
-                    'location' => 'https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap4.min.js',
-                ],
-                [
-                    'type' => 'js',
-                    'asset' => false,
-                    'location' => 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js',
-                ],
-                [
-                    'type' => 'js',
-                    'asset' => false,
-                    'location' => 'https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js',
-                ],
-                [
-                    'type' => 'js',
-                    'asset' => false,
-                    'location' => 'https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js',
                 ],
                 [
                     'type' => 'js',

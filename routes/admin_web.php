@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 
 Route::prefix(config('app.admin_path_name'))->name('admin.')->group(function () {
@@ -20,6 +21,8 @@ Route::prefix(config('app.admin_path_name'))->name('admin.')->group(function () 
         Route::get('', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('profile', [ProfileController::class, 'profile'])->name('profile');
         Route::put('profile', [ProfileController::class, 'handleUpdateProfile'])->name('updateProfile');
+
+        Route::resource('roles', RoleController::class);
 
         Route::patch('users/mass-update', [UserController::class, 'handleMassUpdate']);
         Route::resource('users', UserController::class);
