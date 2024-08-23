@@ -36,8 +36,8 @@
                 <a href="{{ route('admin.banner.create') }}" class="btn btn-default"><i class="fa fa-plus"></i> Add Data</a>
             </div>
         </div>
-        <div class="card-body">
-            <table class="ui celled table" id="data-table">
+        <div class="card-body table-responsive">
+            <table class="table table-responsive" id="data-table">
                 <thead>
                     <tr>
                         <th>Image</th>

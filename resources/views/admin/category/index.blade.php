@@ -52,8 +52,8 @@
                 <a href="{{ route('admin.category.create') }}" class="btn btn-default"><i class="fa fa-plus"></i> Add Data</a>
             </div>
         </div>
-        <div class="card-body">
-            <table class="ui celled table" id="data-table">
+        <div class="card-body table-responsive">
+            <table class="table table-bordered" id="data-table">
                 <thead>
                     <tr>
                         <th><input type="checkbox" class="multi-select-all"></th>
