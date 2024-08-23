@@ -9,6 +9,27 @@ abstract class BaseAdminModules
     const MARK_INACTIVE = 2;
     const MARK_DELETED = 3;
 
+    /*
+    |--------------------------------------------------------------------------
+    | BASE URL
+    |--------------------------------------------------------------------------
+    |
+    | Note that this assumes that you have used the resource
+    | controller for your module as this will add index, edit
+    | update method by it self
+    */
+    protected const BASE_URL = self::BASE_URL;
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODEL
+    |--------------------------------------------------------------------------
+    |
+    | You can define model in constant so you dont have to worrry
+    | about writing it at every function for new module creation
+    */
+    protected const MODEL = self::MODEL;
+
     abstract public function getAll();
 
     abstract public function getRaw($filterData = []);
