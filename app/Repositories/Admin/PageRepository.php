@@ -82,7 +82,7 @@ class PageRepository extends BaseAdminModules
             })
             ->addColumn('action', function ($row) {
                 return '<div>' .
-                    '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="' . route(self::BASE_URL . '.edit', $row->id) . '" class="edit btn btn-success btn-sm mr-2"><i class="fa fa-edit"></i></a>' .
+                    '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="' . route(self::BASE_URL . '.edit', $row->id) . '" class="edit btn btn-default btn-sm mr-2"><i class="fa fa-edit"></i></a>' .
                     PHP_EOL;
             })
             ->editColumn('updated_at', function ($row) {
