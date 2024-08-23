@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PageSeeder::class,
             CountriesTableSeeder::class,
             StatesTableSeeder::class,
+            AdminRoleSeeder::class,
         ]);
     }
 }
