@@ -16,4 +16,7 @@ return [
     'default_datetime_format' => 'd-m-Y H:iA',
     'default_date' => 'd-m-Y',
 
+    //features changes
+    'feature_permission' => true,
+
 ];

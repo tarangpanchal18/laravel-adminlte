@@ -17,6 +17,15 @@ Breadcrumbs::for('profile', function (BreadcrumbTrail $trail) {
     $trail->push('Profile', route('admin.profile'));
 });
 
+Breadcrumbs::for('roles_list', function (BreadcrumbTrail $trail) {
+    $trail->parent('dashboard');
+    $trail->push('Roles', route('admin.roles.index'));
+});
+Breadcrumbs::for('roles_alter', function (BreadcrumbTrail $trail, $actionData) {
+    $trail->parent('roles_list');
+    $trail->push($actionData, route('admin.roles.create'));
+});
+
 Breadcrumbs::for('users_list', function (BreadcrumbTrail $trail) {
     $trail->parent('dashboard');
     $trail->push('Users', route('admin.users.index'));
