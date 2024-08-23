@@ -35,8 +35,7 @@ class BannerController extends Controller
 
     public function store(BannerRequest $request): RedirectResponse
     {
-        $this->bannerRepository->create($request->validated());
-        return redirect(route('admin.banner.index'))->with('success', config('constants.default_data_insert_msg'));
+        return $this->bannerRepository->create($request->validated());
     }
 
     public function edit(Banner $banner)
@@ -50,17 +49,11 @@ class BannerController extends Controller
 
     public function update(BannerRequest $request, Banner $banner): RedirectResponse|JsonResponse
     {
-        $this->bannerRepository->update($banner->id, $request->validated());
-        return $request->ajax()
-            ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
-            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_update_msg'));
+        return $this->bannerRepository->update($banner->id, $request->validated());
     }
 
     public function destroy(Banner $banner, Request $request): RedirectResponse|JsonResponse
     {
-        $this->bannerRepository->delete($banner->id);
-        return $request->ajax()
-            ? response()->json(['success' => true,'message' => config('constants.default_data_deleted_msg')])
-            : redirect(route('admin.banner.index'))->with('success', config('constants.default_data_deleted_msg'));
+        return $this->bannerRepository->delete($banner->id);
     }
 }

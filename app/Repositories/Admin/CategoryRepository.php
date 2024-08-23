@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Admin;
 
+use App\Facades\CustomLogger;
 use App\Interfaces\BaseAdminModules;
 use App\Models\Category;
 use App\Services\FilesService;
@@ -10,6 +11,9 @@ use Yajra\DataTables\DataTables;
 
 class CategoryRepository extends BaseAdminModules
 {
+    const BASE_URL = 'admin.category';
+
+    const MODEL = Category::class;
 
     public function __construct(private FilesService $fileService)
     {
@@ -18,7 +22,7 @@ class CategoryRepository extends BaseAdminModules
 
     public function getAll()
     {
-        return Category::all();
+        return self::MODEL::all();
     }
 
     /**
@@ -26,7 +30,7 @@ class CategoryRepository extends BaseAdminModules
      */
     public function getParentCategory($igore = '')
     {
-        $data = Category::whereNull('parent_id');
+        $data = self::MODEL::whereNull('parent_id');
         if ($igore) {
             $data->where('id', '!=', $igore);
         }
@@ -36,7 +40,7 @@ class CategoryRepository extends BaseAdminModules
 
     public function getRaw($filterData = "")
     {
-        $query = Category::query();
+        $query = self::MODEL::query();
         if (isset($filterData['status'])) {
             $query = $query->where('status', $filterData['status']);
         }
@@ -49,14 +53,14 @@ class CategoryRepository extends BaseAdminModules
 
     public function getById($id)
     {
-        return Category::findOrFail($id);
+        return self::MODEL::findOrFail($id);
     }
 
     public function sanitizeData(array $data)
     {
         if (isset($data['image'])) {
             $fileName = $this->fileService->generateFileName('cat', $data['image']->getClientOriginalExtension());
-            $this->fileService->handleUpload($data['image'], Category::UPLOAD_PATH, $fileName);
+            $this->fileService->handleUpload($data['image'], self::MODEL::UPLOAD_PATH, $fileName);
             $data['image'] = $fileName;
         }
 
@@ -65,35 +69,57 @@ class CategoryRepository extends BaseAdminModules
 
     public function create(array $data)
     {
-        return Category::create($this->sanitizeData($data));
+        try {
+            self::MODEL::create($this->sanitizeData($data));
+            return redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_insert_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('Category', ERROR, $th->getMessage());
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
     }
 
     public function update($id, array $newDetails)
     {
-        $category = Category::whereId($id)->first();
-        $oldImage = $category->image;
-        $status = $category->update($this->sanitizeData($newDetails));
+        try {
+            $category = self::MODEL::whereId($id)->first();
+            $oldImage = $category->image;
+            $status = $category->update($this->sanitizeData($newDetails));
 
-        if ($status && isset($newDetails['image'])) {
-            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $oldImage);
+            if ($status && isset($newDetails['image'])) {
+                $this->fileService->handleRemoveFile(self::MODEL::UPLOAD_PATH, $oldImage);
+            }
+
+            return request()->ajax()
+                ? response()->json(['success' => true, 'message' => config('constants.default_data_update_msg')])
+                : redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_update_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('Category', ERROR, $th->getMessage());
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
         }
-
-        return $status;
     }
 
     public function delete($id)
     {
-        $category = Category::whereId($id)->first();
-        if ($category->image) {
-            $this->fileService->handleRemoveFile(Category::UPLOAD_PATH, $category->image);
-        }
+        try {
+            $category = self::MODEL::whereId($id)->first();
+            if ($category->image) {
+                $this->fileService->handleRemoveFile(self::MODEL::UPLOAD_PATH, $category->image);
+            }
 
-        if ($category->parent_id == null) {
-            $childs = $category->children->pluck('id')->toArray();
-            Category::whereIn('id', $childs)->delete();
-        }
+            if ($category->parent_id == null) {
+                $childs = $category->children->pluck('id')->toArray();
+                self::MODEL::whereIn('id', $childs)->delete();
+            }
 
-        return $category->delete();
+            $category->delete();
+
+            return request()->ajax()
+                ? response()->json(['success' => true, 'message' => config('constants.default_data_deleted_msg')])
+                : redirect(route(self::BASE_URL . '.index'))->with('success', config('constants.default_data_deleted_msg'));
+        } catch (\Throwable $th) {
+            CustomLogger::write('Category', ERROR, $th->getMessage());
+            return redirect(route(self::BASE_URL . '.index'))->with('error', config('constants.default_data_failed_msg'));
+        }
     }
 
     public function getAsyncListingData(Request $request)
@@ -109,13 +135,13 @@ class CategoryRepository extends BaseAdminModules
                     return '<input type="checkbox" name="multi-select-cb" class="multi-select" data-id="'. $row->id .'">';
                 })
                 ->editColumn('name', function($row) {
-                    return '<a href="'. route('admin.category.edit', $row->id) .'">'. $row->name .'</a>';
+                    return '<a href="'. route(self::BASE_URL . '.edit', $row->id) .'">'. $row->name .'</a>';
                 })
                 ->editColumn('status', function($row) {
                     return '<button
                         data-id="'. $row->id .'"
                         data-value="'. $row->status .'"
-                        data-url="'. route("admin.category.index") .'"
+                        data-url="'. route(self::BASE_URL . ".index") .'"
                         data-toggle="tooltip"
                         data-placement="top"
                         title="'. config('constants.default_status_change_txt') .'"
@@ -128,7 +154,7 @@ class CategoryRepository extends BaseAdminModules
                 })
                 ->addColumn('action', function($row) {
                         return '<div style="width: 150px">' .
-                        '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="'. route('admin.category.edit', $row->id) .'" class="edit btn btn-success btn-sm"><i class="fa fa-edit"></i></a>&nbsp;' .
+                        '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="'. route(self::BASE_URL . '.edit', $row->id) .'" class="edit btn btn-success btn-sm"><i class="fa fa-edit"></i></a>&nbsp;' .
                         '<button data-toggle="tooltip" title="'. config('constants.default_delete_txt') .'" onclick="removeData('. $row->id. ')" class="edit btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>' .
                         '<div>' .
                         PHP_EOL;

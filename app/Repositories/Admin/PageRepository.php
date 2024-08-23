@@ -10,14 +10,18 @@ use Illuminate\Support\Str;
 
 class PageRepository extends BaseAdminModules
 {
+    const BASE_URL = 'admin.pages';
+
+    const MODEL = Page::class;
+
     public function getAll()
     {
-        return Page::all();
+        return self::MODEL::all();
     }
 
     public function getRaw($filterData = "")
     {
-        $query = Page::query();
+        $query = self::MODEL::query();
         if ($filterData['status']) {
             $query = $query->where('status', $filterData['status']);
         }
@@ -27,7 +31,7 @@ class PageRepository extends BaseAdminModules
 
     public function getById($id)
     {
-        return Page::findOrFail($id);
+        return self::MODEL::findOrFail($id);
     }
 
     public function sanitizeData(array $data)
@@ -39,17 +43,17 @@ class PageRepository extends BaseAdminModules
 
     public function create(array $data)
     {
-        return Page::create($this->sanitizeData($data));
+        return self::MODEL::create($this->sanitizeData($data));
     }
 
     public function update($id, array $newDetails)
     {
-        return Page::whereId($id)->update($this->sanitizeData($newDetails));
+        return self::MODEL::whereId($id)->update($this->sanitizeData($newDetails));
     }
 
     public function delete($id)
     {
-        Page::destroy($id);
+        self::MODEL::destroy($id);
     }
 
     public function getAsyncListingData(Request $request)
@@ -62,13 +66,13 @@ class PageRepository extends BaseAdminModules
         return DataTables::of($data)
             ->addIndexColumn()
             ->editColumn('page_name', function($row) {
-                return '<a href="'. route('admin.pages.edit', $row->id) .'">'. $row->page_name .'</a>';
+                return '<a href="'. route(self::BASE_URL . '.edit', $row->id) .'">'. $row->page_name .'</a>';
             })
             ->editColumn('status', function ($row) {
                 return '<button
                         data-id="'. $row->id .'"
                         data-value="'. $row->status .'"
-                        data-url="'. route("admin.pages.index") .'"
+                        data-url="'. route(self::BASE_URL . ".index") .'"
                         data-toggle="tooltip"
                         data-placement="top"
                         title="'. config('constants.default_status_change_txt') .'"
@@ -78,7 +82,7 @@ class PageRepository extends BaseAdminModules
             })
             ->addColumn('action', function ($row) {
                 return '<div>' .
-                    '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="' . route('admin.pages.edit', $row->id) . '" class="edit btn btn-success btn-sm mr-2"><i class="fa fa-edit"></i></a>' .
+                    '<a data-toggle="tooltip" title="'. config('constants.default_edit_txt') .'" href="' . route(self::BASE_URL . '.edit', $row->id) . '" class="edit btn btn-success btn-sm mr-2"><i class="fa fa-edit"></i></a>' .
                     PHP_EOL;
             })
             ->editColumn('updated_at', function ($row) {

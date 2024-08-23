@@ -68,15 +68,18 @@
 
 <script>
 $(document).ready(function() {
-    generateDataTable('{{ route("admin.users.index") }}', [
+    generateDataTable(
+        '{{ route("admin.users.index") }}',
+        [
             {data: 'DT_RowIndex', name: 'id'},
             {data: 'name', name: 'first_name'},
             {data: 'phone', name: 'phone'},
             {data: 'email', name: 'email'},
             {data: 'status', name: 'status'},
             {data: 'action', name: 'action'},
-    ], {'status' : $("#filter_status").val()});
-
+        ],
+        {'status' : $("#filter_status").val(),
+    });
 });
 
 function removeData(id) {
