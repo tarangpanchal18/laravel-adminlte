@@ -20,6 +20,7 @@ class PageController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
+        abort_request_if('view cmspage');
         return $request->ajax()
             ? $this->PageRepository->getAsyncListingData($request)
             : view('admin.pages.index');
@@ -27,6 +28,7 @@ class PageController extends Controller
 
     public function create(): View
     {
+        abort_request_if('create cmspage');
         return view('admin.pages.alter', [
             'action' => 'Add',
             'actionUrl' => route('admin.pages.store'),
@@ -43,6 +45,7 @@ class PageController extends Controller
 
     public function edit(Page $page): View
     {
+        abort_request_if('update cmspage');
         return view('admin.pages.alter', [
             'page' => $page,
             'action' => 'Edit',
@@ -52,6 +55,7 @@ class PageController extends Controller
 
     public function update(PageRequest $request, Page $page): RedirectResponse
     {
+        abort_request_if('update cmspage');
         $this->PageRepository->update($page->id, $request->validated());
         return redirect(route('admin.pages.index'))->with('success', config('constants.default_data_update_msg'));
     }

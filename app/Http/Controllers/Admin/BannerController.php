@@ -20,6 +20,7 @@ class BannerController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
+        abort_request_if('view website banner');
         return $request->ajax()
             ? $this->bannerRepository->getAsyncListingData($request)
             : view('admin.banner.index', ['upload_path' => Banner::UPLOAD_PATH]);
@@ -27,6 +28,7 @@ class BannerController extends Controller
 
     public function create(): View
     {
+        abort_request_if('create website banner');
         return view('admin.banner.alter', [
             'action' => 'Add',
             'actionUrl' => route('admin.banner.store'),
@@ -35,11 +37,13 @@ class BannerController extends Controller
 
     public function store(BannerRequest $request): RedirectResponse
     {
+        abort_request_if('create website banner');
         return $this->bannerRepository->create($request->validated());
     }
 
     public function edit(Banner $banner)
     {
+        abort_request_if('update website banner');
         return view('admin.banner.alter', [
             'banner' => $banner,
             'action' => 'Edit',
@@ -49,11 +53,13 @@ class BannerController extends Controller
 
     public function update(BannerRequest $request, Banner $banner): RedirectResponse|JsonResponse
     {
+        abort_request_if('update website banner');
         return $this->bannerRepository->update($banner->id, $request->validated());
     }
 
     public function destroy(Banner $banner, Request $request): RedirectResponse|JsonResponse
     {
+        abort_request_if('delete website banner');
         return $this->bannerRepository->delete($banner->id);
     }
 }
