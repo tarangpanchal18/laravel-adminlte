@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="card-body table-responsive">
-            <table class="table table-responsive" id="data-table">
+            <table class="table table-bordered" id="data-table">
                 <thead>
                     <tr>
                         <th>Image</th>
