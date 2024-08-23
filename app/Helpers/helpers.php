@@ -18,3 +18,14 @@ if (! function_exists('strreplace')) {
         return str_replace($from, $to, $string);
     }
 }
+
+function abort_request_if($bolean, $code = '401', $message = '', $headers = []) {
+    if (config('constants.feature_permission')) {
+        abort_if(
+            !auth()->user()->can($bolean),
+            $code,
+            $message = '',
+            $headers = []
+        );
+    }
+}

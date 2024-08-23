@@ -19,6 +19,7 @@ class UserController extends Controller
 
     public function index(Request $request): View|JsonResponse
     {
+        abort_request_if('view users');
         return $request->ajax()
             ? $this->userRepository->getAsyncListingData($request)
             : view('admin.users.index');
@@ -26,6 +27,7 @@ class UserController extends Controller
 
     public function create(): View
     {
+        abort_request_if('create users');
         return view('admin.users.alter', [
             'action' => 'Add',
             'actionUrl' => route('admin.users.store'),
@@ -34,11 +36,13 @@ class UserController extends Controller
 
     public function store(UserReqeust $request): RedirectResponse
     {
+        abort_request_if('create users');
         return $this->userRepository->create($request->validated());
     }
 
     public function edit(User $user): View
     {
+        abort_request_if('update users');
         return view('admin.users.alter', [
             'user' => $user,
             'action' => 'Edit',
@@ -48,16 +52,19 @@ class UserController extends Controller
 
     public function update(UserReqeust $request, User $user): RedirectResponse|JsonResponse
     {
+        abort_request_if('update users');
         return $this->userRepository->update($user->id, $request->validated());
     }
 
     public function destroy(User $user, Request $request): RedirectResponse|JsonResponse
     {
+        abort_request_if('delete users');
         return $this->userRepository->delete($user->id);
     }
 
     public function handleMassUpdate(Request $request)
     {
+        abort_request_if('update users');
         $ids = $request->ids;
         $operationType = $request->operationType;
         $this->userRepository->updateMultiple(User::class, $ids, $operationType);
