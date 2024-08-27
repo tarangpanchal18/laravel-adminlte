@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Auth\AdminAuthenticatedSessionController;
 use App\Http\Controllers\Admin\BannerController;
@@ -21,6 +22,9 @@ Route::prefix(config('app.admin_path_name'))->name('admin.')->group(function () 
         Route::get('', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('profile', [ProfileController::class, 'profile'])->name('profile');
         Route::put('profile', [ProfileController::class, 'handleUpdateProfile'])->name('updateProfile');
+
+        Route::patch('admins/mass-update', [AdminController::class, 'handleMassUpdate']);
+        Route::resource('admins', AdminController::class);
 
         Route::resource('roles', RoleController::class);
 
