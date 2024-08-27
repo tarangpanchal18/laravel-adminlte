@@ -313,6 +313,13 @@ return [
             'icon' => 'fab fa-dashcube',
         ],
         [
+            'text' => 'Admin List',
+            'url'  => env('ADMIN_PATH') . '/admins',
+            'active' => [env('ADMIN_PATH') . '/admins*'],
+            'icon' => 'fas fa-fw fa-user-shield',
+            'can' => 'view permission module'
+        ],
+        [
             'text' => 'Roles List',
             'url'  => env('ADMIN_PATH') . '/roles',
             'active' => [env('ADMIN_PATH') . '/roles*'],
